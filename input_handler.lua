@@ -33,9 +33,9 @@ local function handleReading(key, item)
     local value = toNumber and tonumber(Ed.readingValue) or Ed.readingValue
 
     if item == 'waves' then
-      Level.waves = value
+      Lvl.waves = value
       Ed.currentWave = 1
-      Utils.updateSpawnpointWaves(Level.spawns, Level.waves)
+      Utils.updateSpawnpointWaves(Lvl.spawns, Lvl.waves)
     elseif item == 'enemy_type' then
       if Ed.selectedEntity.waves[Ed.currentWave] == 0 then
         Ed.selectedEntity.waves[Ed.currentWave] = {}
@@ -66,7 +66,7 @@ end
 local function handleSpawnOptions(key)
 
   if key == 'n' or key == 'N' then
-    Ed.currentWave = Utils.nextIndex(Ed.currentWave, Level.waves, 1)
+    Ed.currentWave = Utils.nextIndex(Ed.currentWave, Lvl.waves, 1)
   end
 
   if key == 'a' or key == 'A' then
@@ -126,7 +126,7 @@ end
 
 -- Public Functions
 function InputHandler.init(editor, level, toolset)
-  Ed, Lvl, Tools = editor, lvl, toolset
+  Ed, Lvl, Tools = editor, level, toolset
 end
 
 --------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ function InputHandler.update(key, tool, hasSelected, isEditing, reading)
       File = io.open('res/result.lua', 'w')
       if File then
         File:write('return {' .. charE)
-        Utils.saveToFile(File, Level, 0)
+        Utils.saveToFile(File, Lvl, 0)
         File:write('}')
         File:close()
       end

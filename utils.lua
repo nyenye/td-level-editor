@@ -1,3 +1,5 @@
+charS, charE = '  ', '\n'
+
 local function nextIndex(current, max, min)
   return current + 1 > max and min or current + 1
 end
@@ -48,9 +50,7 @@ local function getReadingItem(reading, waves, e_type, e_numbers, e_cooldown)
 end
 
 --------------------------------------------------------------------------------
-
 local function saveToFile(file, table, indent)
-  local charS, charE = '  ', '\n'
   local indentation = ''
   for i = 1, indent do indentation = indentation .. charS end
 

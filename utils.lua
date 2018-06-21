@@ -76,11 +76,35 @@ end
 
 --------------------------------------------------------------------------------
 
+local function isInside(x, y, entity)
+  if entity.w and entity.h then
+    local inWidth = x >= entity.x and x <= entity.x + entity.w
+    local inHeight = y >= entity.y and y <= entity.y + entity.h
+    return inWidth and inHeight
+  end
+  return (x - entity.x)^2 + (y - entity.y)^2 < 25^2
+end
+
+--------------------------------------------------------------------------------
+
+local function isOverlaping(x, y, entity)
+  if entity.w and entity.h then
+    local inWidth = math.abs(x - entity.x) < entity.w
+    local inHeight = math.abs(y - entity.y) < entity.h
+    return inWidth and inHeight
+  end
+  return math.abs(x - entity.x) < 25 and math.abs(y - entity.y) < 25
+end
+
+--------------------------------------------------------------------------------
+
 return {
   nextIndex = nextIndex,
   updateSpawnpointWaves = updateSpawnpointWaves,
   getReadingItem = getReadingItem,
   clearTableIPairs = clearTableIPairs,
   clearTablePairs = clearTablePairs,
-  saveToFile = saveToFile
+  saveToFile = saveToFile,
+  isInside = isInside,
+  isOverlaping = isOverlaping
 }

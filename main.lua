@@ -2,13 +2,16 @@
 Utils = require('utils')
 local Help = require('help')
 local InputHandler = require('input_handler')
+local MouseHandler = require('mouse_handler')
 local DrawHandler = require('draw_handler')
 
 --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-local Tools = { 'GOAL', 'BUILDING', 'SPAWN' }
+local Tools = { 'GATE', 'BUILDING_POINT', 'SPAWN_POINT' }
 
-local Key
+local Key = false
+local Mouse = {{pressed = false, down = false}, {pressed = false, down = false}, lastButton = 0}
 
 local Ed = {
   help = true,
@@ -39,19 +42,19 @@ local Ed = {
 local File = nil
 
 local Lvl = {
-  goals = {},
-  spawns = {},
-  buildings = {},
+  gates = {},
+  spawnPoints = {},
+  buildingPoints = {},
   waves = 3
 }
 
---------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 function love.load()
   InputHandler.init(Ed, Lvl, Tools)
   DrawHandler.init(Ed, Lvl, Tools)
+  MouseHandler.init(Ed, Lvl, Tools)
   Ed.map = love.graphics.newImage('/res/test.png')
 end
 
@@ -60,18 +63,26 @@ end
 function love.update(dt)
   local tool = Tools[Ed.currentTool]
   local hasSelected = (Ed.selectedEntity or Ed.draggingEntity) and true or false
-  local isEditing = Ed.editingSpawnWave
+  local editing = Ed.editingSpawnWave
   local reading = Utils.getReadingItem(
     Ed.reading, Ed.readingWaves, Ed.readingEnemyType,
     Ed.readingEnemyNumbers, Ed.readingEnemyCooldown
   )
 
   if Key then
-    InputHandler.update(Key, tool, hasSelected, isEditing, reading)
+    InputHandler.update(Key, tool, hasSelected, editing, reading)
+    Key = false
   end
-  Key = false
 
-  Help:update(tool, hasSelected, isEditing, reading)
+  if Mouse.lastButton ~= 0 then
+    if not reading and not editing then
+      MouseHandler.update(Mouse[Mouse.lastButton], Mouse.lastButton, tool)
+    end
+    Mouse[Mouse.lastButton].pressed = false
+    Mouse.lastButton = 0
+  end
+
+  Help:update(tool, hasSelected, editing, reading)
 end
 
 --------------------------------------------------------------------------------
@@ -83,17 +94,17 @@ function love.draw()
   -- ENTITIES
   local color = {r = 0, g = 0, b = 255}
   love.graphics.setColor(0, 0, 255, 255)
-  for _, goal in ipairs(Lvl.goals) do
+  for _, goal in ipairs(Lvl.gates) do
     DrawHandler.drawEntity(goal, color)
   end
   color = {r = 0, g = 255, b = 0}
   love.graphics.setColor(0, 255, 0, 255)
-  for _, building in ipairs(Lvl.buildings) do
+  for _, building in ipairs(Lvl.buildingPoints) do
     DrawHandler.drawEntity(building, color)
   end
   color = {r = 255, g = 0, b = 0}
   love.graphics.setColor(255, 0, 0, 255)
-  for _, spawn in ipairs(Lvl.spawns) do
+  for _, spawn in ipairs(Lvl.spawnPoints) do
     DrawHandler.drawEntity(spawn, color)
   end
   -- ENTITIES END
@@ -135,47 +146,50 @@ end
 
 -- MOUSEPRESSED
 function love.mousepressed(x, y, button, isTouch)
-  if Ed.reading or Ed.editingSpawnWave then
-    return
-  end
+  Mouse[button].x, Mouse[button].y = x, y
+  Mouse[button].pressed = true
+  Mouse[button].down = true
+  Mouse.lastButton = button
 
-  if Ed.selectedEntity and (x - Ed.selectedEntity.x)^2 + (y - Ed.selectedEntity.y)^2 > 25^2 then
-    Ed.selectedEntity = nil
-    return
-  end
-
-  Ed.selectedEntity = nil
-
-  local entities = Tools[Ed.currentTool] == 'GOAL' and Lvl.goals or
-  Tools[Ed.currentTool] == 'BUILDING' and Lvl.buildings or
-  Tools[Ed.currentTool] == 'SPAWN' and Lvl.spawns or nil
-
-  if not entities then return end
-
-  for i, e in ipairs(entities) do
-    if (x - e.x)^2 + (y - e.y)^2 < 25^2 then
-      if button == 1 then
-        Ed.draggingEntity = e
-        return
-      else
-        Ed.lastRemoved.entity = e
-        Ed.lastRemoved.collection = entities
-        Ed.lastRemoved.valid = true
-        table.remove(entities, i)
-        return
-      end
-    end
-  end
-  if button == 1 then
-    local newEntity = {x = x, y = y}
-    if Tools[Ed.currentTool] == 'SPAWN' then
-      newEntity.waves = {}
-      for i = 1, Lvl.waves do
-        newEntity.waves[i] = 0
-      end
-    end
-    table.insert(entities, newEntity)
-  end
+  -- if Ed.reading or Ed.editingSpawnWave then
+  --   return
+  -- end
+  --
+  -- if Ed.selectedEntity and (x - Ed.selectedEntity.x)^2 + (y - Ed.selectedEntity.y)^2 > 25^2 then
+  --   Ed.selectedEntity = nil
+  --   return
+  -- end
+  --
+  -- local entities = Tools[Ed.currentTool] == 'GATE' and Lvl.gates or
+  -- Tools[Ed.currentTool] == 'BUILDING_POINT' and Lvl.buildingPoints or
+  -- Tools[Ed.currentTool] == 'SPAWN_POINT' and Lvl.spawnPoints or nil
+  --
+  -- if not entities then return end
+  --
+  -- for i, e in ipairs(entities) do
+  --   if (x - e.x)^2 + (y - e.y)^2 < 25^2 then
+  --     if button == 1 then
+  --       Ed.draggingEntity = e
+  --       return
+  --     else
+  --       -- Ed.lastRemoved.entity = e
+  --       -- Ed.lastRemoved.collection = entities
+  --       -- Ed.lastRemoved.valid = true
+  --       -- table.remove(entities, i)
+  --       -- return
+  --     end
+  --   end
+  -- end
+  -- if button == 1 then
+  --   local newEntity = {x = x, y = y}
+  --   if Tools[Ed.currentTool] == 'SPAWN_POINT' then
+  --     newEntity.waves = {}
+  --     for i = 1, Lvl.waves do
+  --       newEntity.waves[i] = 0
+  --     end
+  --   end
+  --   table.insert(entities, newEntity)
+  -- end
 end
 -- MOUSEPRESSED END
 
@@ -183,14 +197,18 @@ end
 
 -- MOUSERELEASED
 function love.mousereleased(x, y, button, isTouch)
-  if Ed.draggingEntity then
-    local e = Ed.draggingEntity
-    if math.abs(x - e.x) > 25 or math.abs(y - e.y) > 25 then
-      e.x, e.y = x, y
-    end
-    Ed.selectedEntity = e
-    Ed.draggingEntity = nil
-  end
+  Mouse[button].x, Mouse[button].y = x, y
+  Mouse[button].down = false
+  Mouse.lastButton = button
+
+  -- if Ed.draggingEntity then
+  --   local e = Ed.draggingEntity
+  --   if math.abs(x - e.x) > 25 or math.abs(y - e.y) > 25 then
+  --     e.x, e.y = x, y
+  --   end
+  --   Ed.selectedEntity = e
+  --   Ed.draggingEntity = nil
+  -- end
 end
 -- MOUSERELEASED END
 

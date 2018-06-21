@@ -35,7 +35,7 @@ local function handleReading(key, item)
     if item == 'waves' then
       Lvl.waves = value
       Ed.currentWave = 1
-      Utils.updateSpawnpointWaves(Lvl.spawns, Lvl.waves)
+      Utils.updateSpawnpointWaves(Lvl.spawnPoints, Lvl.waves)
     elseif item == 'enemy_type' then
       if Ed.selectedEntity.waves[Ed.currentWave] == 0 then
         Ed.selectedEntity.waves[Ed.currentWave] = {}
@@ -161,7 +161,7 @@ function InputHandler.update(key, tool, hasSelected, isEditing, reading)
     end
   end
 
-  if tool ~= 'SPAWN' or (tool == 'SPAWN' and not hasSelected) then
+  if tool ~= 'SPAWN_POINT' or (tool == 'SPAWN_POINT' and not hasSelected) then
     if key == 'space' and not Ed.editingSpawnWave then
       Ed.currentTool = Utils.nextIndex(Ed.currentTool, #Tools, 1)
       Ed.selectedEntity = nil
@@ -182,7 +182,7 @@ function InputHandler.update(key, tool, hasSelected, isEditing, reading)
     end
   end
 
-  if tool == 'SPAWN' then
+  if tool == 'SPAWN_POINT' then
     if hasSelected and isEditing then
       handleSpawnEdit(key)
       return

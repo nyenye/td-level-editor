@@ -5,11 +5,11 @@ local Help = {
 }
 
 local HelpStates = {
-  TOOL_GOAL = 1,
-  TOOL_BUILDING = 2,
-  TOOL_SPAWN = 3,
-  SPAWN_SELECTED = 4,
-  EDITING_SPAWN = 5,
+  TOOL_GATE = 1,
+  TOOL_BUILDING_POINT = 2,
+  TOOL_SPAWN_POINT = 3,
+  SPAWN_POINT_SELECTED = 4,
+  EDITING_SPAWN_POINT = 5,
   READING = 6
 }
 
@@ -23,9 +23,14 @@ local function drawControls()
   love.graphics.print('Press \'CTRL + Z\' to RESTORE LAST REMOVED entity (only one)', 685, 538)
 end
 
-local function drawTool(tool)
-  love.graphics.print('\'LEFT CLICK\' to create or select a ' .. tool, 20, 518)
-  love.graphics.print('\'RIGHT CLICK\' to remove a ' .. tool, 20, 538)
+local function drawTool(tool, hasSelected)
+  if hasSelected then
+    love.graphics.print('\'LEFT CLICK\' to drag entity ' .. tool, 20, 518)
+    love.graphics.print('\'RIGHT CLICK\' to disselect entity', 20, 538)
+  else
+    love.graphics.print('\'LEFT CLICK\' to create or select a ' .. tool, 20, 518)
+    love.graphics.print('\'RIGHT CLICK\' to remove a ' .. tool, 20, 538)
+  end
   love.graphics.print('Press \'SPACE\' to change CURRENT TOOL', 20, 558)
 end
 
@@ -67,17 +72,17 @@ function Help:update(tool, hasSelected, isEditing, reading)
     return
   end
 
-  if tool == 'GOAL' then
-    self.currentState = HelpStates.TOOL_GOAL
-  elseif tool == 'BUILDING' then
-    self.currentState = HelpStates.TOOL_BUILDING
-  else -- tool == 'SPAWN'
+  if tool == 'GATE' then
+    self.currentState = HelpStates.TOOL_GATE
+  elseif tool == 'BUILDING_POINT' then
+    self.currentState = HelpStates.TOOL_BUILDING_POINT
+  else -- tool == 'SPAWN_POINT'
     if hasSelected and not isEditing then
-      self.currentState = HelpStates.SPAWN_SELECTED
+      self.currentState = HelpStates.SPAWN_POINT_SELECTED
     elseif hasSelected and isEditing then
-      self.currentState = HelpStates.EDITING_SPAWN
+      self.currentState = HelpStates.EDITING_SPAWN_POINT
     else
-      self.currentState = HelpStates.TOOL_SPAWN
+      self.currentState = HelpStates.TOOL_SPAWN_POINT
     end
   end
 end
@@ -87,34 +92,34 @@ function Help:draw()
   love.graphics.rectangle('fill', 0, 508, 1080, 100)
 
   love.graphics.setColor(0, 0, 0, 255)
-  if self.currentState == HelpStates.TOOL_GOAL then
-    drawTool('GOAL')
+  if self.currentState == HelpStates.TOOL_GATE then
+    drawTool('GATE', self.hasSelected)
     if not self.hasSelected then
       drawControls()
     end
     return
   end
 
-  if self.currentState == HelpStates.TOOL_BUILDING then
-    drawTool('BUILDING')
+  if self.currentState == HelpStates.TOOL_BUILDING_POINT then
+    drawTool('BUILDING_POINT', self.hasSelected)
     if not self.hasSelected then
       drawControls()
     end
     return
   end
 
-  if self.currentState == HelpStates.TOOL_SPAWN then
-    drawTool('SPAWN')
+  if self.currentState == HelpStates.TOOL_SPAWN_POINT then
+    drawTool('SPAWN_POINT')
     drawControls()
     return
   end
 
-  if self.currentState == HelpStates.SPAWN_SELECTED then
+  if self.currentState == HelpStates.SPAWN_POINT_SELECTED then
     drawSpawnSelected()
     return
   end
 
-  if self.currentState == HelpStates.EDITING_SPAWN then
+  if self.currentState == HelpStates.EDITING_SPAWN_POINT then
     drawEditingSpawn()
     return
   end
